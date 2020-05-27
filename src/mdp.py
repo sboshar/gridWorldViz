@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-def mdp:
+class MDP:
   def __init__(self, agent, board, actions, transition, reward, discount_factor):
     self.agent = agent
     self.board = board
@@ -13,7 +13,7 @@ def mdp:
   def getSPrime(self, s, a):
     return (s[0] + a[0], s[1] + a[1])
 
-  def greedy():
+  #def greedy():
   
   def processAction(self, s, a):
     rows = board[(-1, -1)][0]
@@ -21,7 +21,7 @@ def mdp:
     sPrime = self.getSPrime(s, a)
     if (board[s] == 'r'):
       newX = random.randint(0, cols - 1)
-      newY = random.randint(0, rows - 1
+      newY = random.randint(0, rows - 1)
       #go to random
       self.agent.setX(newX)
       self.agent.setY(newY)      

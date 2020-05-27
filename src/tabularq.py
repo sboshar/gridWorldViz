@@ -4,12 +4,12 @@ class TabularQ:
     self.states = states
     self.actions = actions
     #create a dictionary for the q q_table intialize q values to 0.0
-    self.q_table = { (s,a):0.0 for s in states for a in actions}
+    self.q_table = { (s,a):0 for s in states for a in actions}
   
   def getQ(self):
     return self.q_table
   
-  def getActions():
+  def getActions(self):
     return self.actions
 
   def setQ(self, new_q):
@@ -27,7 +27,4 @@ class TabularQ:
     copy.setQ(self.q_table)
     return copy
   
-  #value of a particular 
-  def value(self, s):
-    return max(self.q_table.getValue(s,a) for a in self.actions)
-
+  

@@ -9,15 +9,15 @@ class Agent:
   
   def getX(self):
     return self.__x
-  n
+  
   def getY(self):
     return self.__y
 
   def setX(self, x):
-    return self.__x = x
+    self.__x = x
 
   def setY(self, y):
-    return self.__y = y
+    self.__y = y
   
   def __str__(self):
     return f"({self.__x}, {self.__y})"
