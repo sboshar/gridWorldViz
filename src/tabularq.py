@@ -17,7 +17,7 @@ class TabularQ:
     return np.copy(self.q_table)
   
   def __mapAction(self, a): 
-    return self.actionDict[a]
+    return self.__actionDict[a]
   
   def getActions(self):
     return np.copy(self.actions)
@@ -52,7 +52,7 @@ class TabularQ:
 
   def copy(self):
     new_q_table = TabularQ(self.board, self.actions)
-    new_q_table.setQ(np.copy(self.q_table))
+    new_q_table.setQ(np.copy(self.q_table))\
+    # print(id(new_q_table) == id(self.q_table))
     return new_q_table
-  
-  
+

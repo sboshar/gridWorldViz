@@ -1,0 +1,19 @@
+value iteration(maxiter)
+  for loop :
+    f
+    for s in mdp.getStates:
+      for a in mdp.getActions:
+`         q = mdp.r + mdp.dis* mdp.transition_fn(s,a)*
+
+switch to nested arrays;
+self.q = np.zeros(np.concatenate([self.buckets, [actionspaccesize]]))
+
+board_dim = (x, y)
+actonspacesizde = (4,)
+(10,10) + (4, )-> (10,10,4)
+self.q = np.zeros((10,10,4))
+self.q = np.zeros(bd + as)
+q[s][a] = q value at that state and action
+
+q[s]
+self.q_table = { (s,a):0 for s in states for a in actions}
