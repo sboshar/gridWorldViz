@@ -48,7 +48,7 @@ class TabularQ:
     return self.q_table[s][self.__actionDict[a]]
 
   def setValue(self, s, a, v ):
-    self.q_table[s][self.__actionDict[a]] = v
+    self.q_table[s][self.__actionDict[a]] = round(v, 5)
 
   def copy(self):
     new_q_table = TabularQ(self.board, self.actions)
@@ -56,3 +56,4 @@ class TabularQ:
     # print(id(new_q_table) == id(self.q_table))
     return new_q_table
 
+ 

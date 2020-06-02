@@ -24,7 +24,7 @@ def testSetUpEnvironment():
   printBoard(board)
   print("---------------------------")
 
-def reward(s, a, rewards={'': -.1, 'w': -.1, 't': -2, 'r': 3}):
+def reward(s, a, rewards={'': -.1, 'w': -.1, 't': -10, 'r': 3}):
   sPrime = getSPrime(s, a)    
   if not isValidMove(s, a):
     return -.1
@@ -36,7 +36,6 @@ def testReward():
   print("Expecting -1:", reward((0, 1), (3, 0)))
   print("Expecing 0", reward((2, 3), (1, 0)))
   print("-------------------")
-  
 
 # def createTransition(probs, actions):
 #   transition = {}
@@ -44,7 +43,7 @@ def testReward():
 #     transition[actions[i]] = probs[i]
 #   return transition
 
-def transition(s, a, pActual = 0.9):
+def transition(s, a, pActual = 0.5):
   # sPrime = getSPrime(s, a)
   # possibleStates = validStates(s)
   # if len(possibleStates) == 0:
@@ -52,7 +51,11 @@ def transition(s, a, pActual = 0.9):
   # if len(possibleStates) == 1:
   #   return {possibleStates[0]: 1}
   expectedState = getSPrime(s, a)
-  return {getSPrime(s, aPrime): pActual if (expectedState == getSPrime(s, aPrime)) else (1 - pActual) / (len(actions) - 1) for aPrime in actions}
+  neighbors = validStates(s)
+  # print(neighbors, s, a, end=" ")
+
+  return {sPrime: pActual if (getSPrime(s, a) == sPrime) else ((1 - pActual) / (len(neighbors) - 1)) for sPrime in neighbors}
+  # return {getSPrime(s, aPrime): pActual if (expectedState == getSPrime(s, aPrime)) else (1 - pActual) / (len(actions) - 1) for aPrime in actions}
 
   # return {validS: pActual if (getSPrime(s,a) == validS) else ((1 - pActual) / (len(possibleStates) - 1)) for validS in validStates(s)}
 
@@ -108,7 +111,7 @@ def testValidActions():
 
 def isValidMove(s, a):
   return isValidState(getSPrime(s, a))
-  
+ 
 def isValidState(s):
   if (s[0] >= rows or s[0] < 0):
     return False
@@ -151,20 +154,22 @@ def printBoard(board):
   print("--------------------------")
 
 def value(s, q_table):
-  return np.max(q_table.getQ()[s]) if isValidState(s) else 0
+  return max([q_table.getValue(s, a) for a in validActions(s)])
+  # return np.max(q_table.getQ()[s]) if isValidState(s) else 0
 
 def expectedValue(s, a, q_table, pActual = 0.5):
+  # print("SUMMMMM of probabilities: " + str(sum(transition(s, a, pActual).values())))
   # print("Transition of " + str(s) + ", " + str(a) +  ": " + str(transition(s, a, pActual)))
-  
+  # print(len(validStates(s)), sum([value(sPrime, q_table) * p for (sPrime, p) in transition(s, a, pActual).items()]))
   return sum([value(sPrime, q_table) * p for (sPrime, p) in transition(s, a, pActual).items()]) 
 
 def plotQ(q_table):
-  converted = [[max([q_table.getValue((x, y), a) for a in q_table.actions]) for y in range(cols)] for x in range(rows)]
+  converted = [[max([q_table.getValue((x, y), a) for a in validActions((x, y))]) for y in range(cols)] for x in range(rows)]
   mi = min([min(i) for i in converted])
   for w in walls:
     converted[w[0]][w[1]] = mi # 1, 0????
   ma = max([max(i) for i in converted])
-  print(np.array(converted).reshape(rows,cols))
+  # print(np.array(converted).reshape(rows,cols))
   converted = [[np.interp(converted[x][y], [mi, ma], [0, 1]) for y in range(rows)] for x in range(cols)]
   
   directions = ["r", "l", "d", "u"]
@@ -173,11 +178,17 @@ def plotQ(q_table):
   bestActions = []
   for x in range(cols):
     for y in range(rows):
-      # print(final_q.q_table[(x, y)])
-      bestActions.append(np.argmax(q_table.q_table[(x, y)]))
+      s = (x, y)
+      bestA = 0
+      for a in range(len(actions)):
+        if isValidState(getSPrime(s, actions[a])) and q_table.getValue(s, actions[a]) > q_table.getValue(s, actions[bestA]):
+          bestA = a
+      bestActions.append(bestA)
   print("Best Actions")
   print(np.array(bestActions).reshape(rows, cols))  
 
+  for a in actions:
+    print("Value for taking action", a, "from state (8, 8)", q_table.getValue((8, 8), a))
   horiz = np.array([actions[i][1] for i in bestActions])
   vert = np.array([-1 * actions[i][0] for i in bestActions])
 
@@ -186,13 +197,13 @@ def plotQ(q_table):
   print("-------------------------------")
   printBoard(board)
 
-  def printBudgetArrows():
-    print("DIRECTIONS-----------------")
-    for r in np.array(bestActions).reshape(rows, cols):
-      for tile in r:
-        print(directions[tile], end ="")
-      print("")
-    print("-----------------------")
+  # def printBudgetArrows():
+  #   print("DIRECTIONS-----------------")
+  #   for r in np.array(bestActions).reshape(rows, cols):
+  #     for tile in r:
+  #       print(directions[tile], end ="")
+  #     print("")
+  #   print("-----------------------")
 
   # printBudgetArrows()
 # [[q_table.getValue(i, z)) for i in range(rows)] for z in range(cols)]
@@ -209,13 +220,14 @@ def plotQ(q_table):
   fig, ax = plt.subplots()
   q = ax.quiver(X, Y, horiz, vert)
 
-  plt.imshow(converted, cmap=plt.get_cmap("YlGnBu"))
+  # , cmap=plt.get_cmap("YlGnBu")
+  plt.imshow(converted)
   plt.colorbar()
   plt.show()
 
 def value_iteration(q_table, eps=0.01, max_iter=10000):
   #value of a particular 
-  plotQ(q_table)
+  # plotQ(q_table)
   for i in range(max_iter):
     # print(i)
     new_q_table = q_table.copy()
@@ -226,14 +238,14 @@ def value_iteration(q_table, eps=0.01, max_iter=10000):
         for a in actions:
           #only take action if possible
           #just dont take action if it leads you out of bounds
-          # if isValidMove(s, a):
+          if isValidMove(s, a):
           # if board[s] != 'w':
             # if isValidMove(s, a):
-          new_q_table.setValue(s,a,reward(s,a) + discount_factor * expectedValue(s,a, q_table))
-          delta = max(delta, abs(new_q_table.getValue(s,a) - q_table.getValue(s,a)))
+            new_q_table.setValue(s,a,reward(s,a) + discount_factor * expectedValue(s,a, q_table))
+            delta = max(delta, abs(new_q_table.getValue(s,a) - q_table.getValue(s,a)))
             # else:
             #   new_q_table.setValue(s,a, q_table.getValue(s, a) - 1)
-    print(delta)
+    print("DELTA", delta)
     if delta < eps:
       plotQ(new_q_table)
       return new_q_table
@@ -246,14 +258,20 @@ def value_iteration(q_table, eps=0.01, max_iter=10000):
 
 #Global
 actions =  [(1, 0), (-1, 0), (0, -1), (0, 1)]
-rows = 11
-cols = 11
+# actions =  [(1, 1), (-2, 1), (0, -2), (0, 0)]
+
+rows = 10
+cols = 10
 # traps = [(1, 1)]
-# treasure = [(3, 3)]
-# walls = [(2,3), (1,4)]
-traps = [(5, 5), (10, 9), (10, 8),(10, 7),(10, 6),(10, 5),(10, 4),(10, 3),(10, 2),(10, 1),(10, 0)]
-treasure = []
-walls = []
+traps = [(1, 2)]
+treasure = [(4, 7)]
+traps = traps + [(6, 7)]
+walls = [(3, 4), (5, 4)]
+# walls = walls + [(3, x) for x in range(5, )]
+# walls = walls + [(5, x) for x in range(5, 9)]
+# traps = [(5, 5), (10, 9), (10, 8),(10, 7),(10, 6),(10, 5),(10, 4),(10, 3),(10, 2),(10, 1),(10, 0)]
+# treasure = [] 
+# walls = []
 
 board = setUpEnvironment(traps, treasure, walls, rows, cols)
 print(board)
