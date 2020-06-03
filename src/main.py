@@ -1,7 +1,7 @@
-from mdp import MDP
 from tabularq import TabularQ
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 def getSPrime(s, a):
   return (s[0] + a[0], s[1] + a[1])
@@ -24,7 +24,7 @@ def testSetUpEnvironment():
   printBoard(board)
   print("---------------------------")
 
-def reward(s, a, rewards={'': -.1, 'w': -.1, 't': -10, 'r': 3}):
+def reward(s, a, rewards={'': -.1, 'w': -.1, 't': -3, 'r': 3}):
   sPrime = getSPrime(s, a)    
   if not isValidMove(s, a):
     return -.1
@@ -43,7 +43,7 @@ def testReward():
 #     transition[actions[i]] = probs[i]
 #   return transition
 
-def transition(s, a, pActual = 0.5):
+def transition(s, a, pActual = 0.7):
   # sPrime = getSPrime(s, a)
   # possibleStates = validStates(s)
   # if len(possibleStates) == 0:
@@ -121,6 +121,9 @@ def isValidState(s):
     return False
   return True
 
+def getAllValidStates():
+  return [(x,y) for x in range(rows) for y in range(cols) if board[x][y] != 'w']
+        
 
 def testIsValidMove():
   print("Testing isValidMove -----------------")
@@ -153,28 +156,26 @@ def printBoard(board):
   print(board)
   print("--------------------------")
 
-def value(s, q_table):
+def value(s, q_table):  
   return max([q_table.getValue(s, a) for a in validActions(s)])
   # return np.max(q_table.getQ()[s]) if isValidState(s) else 0
 
-def expectedValue(s, a, q_table, pActual = 0.5):
-  # print("SUMMMMM of probabilities: " + str(sum(transition(s, a, pActual).values())))
-  # print("Transition of " + str(s) + ", " + str(a) +  ": " + str(transition(s, a, pActual)))
-  # print(len(validStates(s)), sum([value(sPrime, q_table) * p for (sPrime, p) in transition(s, a, pActual).items()]))
-  return sum([value(sPrime, q_table) * p for (sPrime, p) in transition(s, a, pActual).items()]) 
+def expectedValue(s, a, q_table):
+  # if isTerminal(s):
+  #   print("Found terminal state at", s)
+  #   return randomValue(q_table)
+  if isTerminal(getSPrime(s, a)):
+    return 0
+  return sum([value(sPrime, q_table) * p for (sPrime, p) in transition(s, a).items()]) 
 
 def plotQ(q_table):
-  converted = [[max([q_table.getValue((x, y), a) for a in validActions((x, y))]) for y in range(cols)] for x in range(rows)]
-  mi = min([min(i) for i in converted])
-  for w in walls:
-    converted[w[0]][w[1]] = mi # 1, 0????
-  ma = max([max(i) for i in converted])
-  # print(np.array(converted).reshape(rows,cols))
-  converted = [[np.interp(converted[x][y], [mi, ma], [0, 1]) for y in range(rows)] for x in range(cols)]
-  
-  directions = ["r", "l", "d", "u"]
+  #what we needd to do is aweighted average of q_table actions
+  # converted = [[max([expectedValue((x, y), a, q_table) for a in validActions((x, y))]) for y in range(cols)] for x in range(rows)]
+  print(q_table.getQ()[(1,2)])
+  print(q_table.getQ()[(1,0)]) 
+  print(q_table.getQ()[(0,1)])
+  print(q_table.getQ()[(2,1)])
 
-  # Indices are messed up
   bestActions = []
   for x in range(cols):
     for y in range(rows):
@@ -186,9 +187,43 @@ def plotQ(q_table):
       bestActions.append(bestA)
   print("Best Actions")
   print(np.array(bestActions).reshape(rows, cols))  
+  
+  bestActions1 = np.array(bestActions).reshape(rows, cols)
+
+
+  pActual = .7
+  converted = []
+  for x in range(cols):
+    temp = []
+    for y in range(rows):
+      weightedS = 0
+      vActions = validActions(s)
+      s = (x, y)
+      for a in vActions:
+        if a == actions[bestActions1[s]]:
+          weightedS += pActual * q_table.getValue(s, a)
+        else:
+          weightedS += (1 - pActual) / (len(vActions) - 1)
+      temp.append(weightedS)      
+    converted.append(temp)
+  
+  print(converted)
+  # converted = [[expectedValue((x, y), a, q_table) for a in validActions((x, y)) for y in range(cols)] for x in range(rows)]
+  mi = min([min(i) for i in converted])
+  # for w in walls:
+  #   converted[w[0]][w[1]] = mi # 1, 0????
+  ma = max([max(i) for i in converted])
+  # print(np.array(converted).reshape(rows,cols))
+  converted = [[np.interp(converted[x][y], [mi, ma], [0, 1]) for y in range(rows)] for x in range(cols)]
+  
+  directions = ["r", "l", "d", "u"]
+  
+  # Indices are messed up
+
+ 
 
   for a in actions:
-    print("Value for taking action", a, "from state (8, 8)", q_table.getValue((8, 8), a))
+    print("Value for taking action", a, "from state (4, 4)", q_table.getValue((4, 4), a))
   horiz = np.array([actions[i][1] for i in bestActions])
   vert = np.array([-1 * actions[i][0] for i in bestActions])
 
@@ -225,12 +260,29 @@ def plotQ(q_table):
   plt.colorbar()
   plt.show()
 
+def averageValues():
+  total = 0
+  totalValue = 0
+  for x in range(rows):
+    for y in range(cols):
+      s = (x, y)
+      for a in validActions(s):
+        total += 1
+        totalValue += value(s, a)
+  return totalValue / total
+
+def randomValue(q_table):
+  return value(random.choice(getAllValidStates()), q_table) if getAllValidStates() else None
+
+def isTerminal(s):
+  return s in treasure
+
 def value_iteration(q_table, eps=0.01, max_iter=10000):
   #value of a particular 
   # plotQ(q_table)
   for i in range(max_iter):
-    # print(i)
     new_q_table = q_table.copy()
+    plotQ(new_q_table)
     delta = 0  
     for x in range(len(board)):
       for y in range(len(board[0])):
@@ -248,6 +300,8 @@ def value_iteration(q_table, eps=0.01, max_iter=10000):
     print("DELTA", delta)
     if delta < eps:
       plotQ(new_q_table)
+      print("TRANSITION LEFT", transition((4, 4), (0, -1)))
+      print("TRANSITION RIGHT", transition((4, 4), (0, 1)))
       return new_q_table
 
     q_table = new_q_table.copy()
@@ -263,9 +317,9 @@ actions =  [(1, 0), (-1, 0), (0, -1), (0, 1)]
 rows = 10
 cols = 10
 # traps = [(1, 1)]
-traps = [(1, 2)]
+traps = [(1, 1)]
 treasure = [(4, 7)]
-traps = traps + [(6, 7)]
+# traps = traps + [(6, 7)]
 walls = [(3, 4), (5, 4)]
 # walls = walls + [(3, x) for x in range(5, )]
 # walls = walls + [(5, x) for x in range(5, 9)]
