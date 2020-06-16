@@ -397,5 +397,5 @@ def value_iteration(q_table, eps=0.01, max_iter=10000, plot=False, plotEvery=Fal
 
 if __name__ == "__main__":
   board = setUpEnvironment(randomEnv=True, printEnv=True)
-  q_table = TabularQ(board, actions)
+  q_table = TabularQ(board.shape, actions)
   _ = value_iteration(q_table, plot=True, plotEvery=False, verbose=False, recolor=1, arrows=True)

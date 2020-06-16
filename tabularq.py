@@ -1,8 +1,9 @@
 import numpy as np
 class TabularQ:
 
-  def __init__(self, board, actions):
-    self.board = board
+  # b = tabularQ((rows, cols), )
+  def __init__(self, stateDimensions, actions):
+    self.stateDimensions = stateDimensions
     self.actions = actions
 
     #dictionary mapping each action in actions to the index of that action
@@ -11,10 +12,13 @@ class TabularQ:
       self.__actionDict[actions[i]] = i
 
     #creates a dictionary for the q_table, intializes q values to 0.0
-    self.q_table = np.zeros(board.shape + (len(actions),))
-    
+    self.q_table = np.zeros(stateDimensions + (len(actions),))
+
   def getQ(self):
     return np.copy(self.q_table)
+    
+  def getStateDimension(self):
+    return self.stateDimensions
   
   def __mapAction(self, a): 
     return self.__actionDict[a]
@@ -33,8 +37,6 @@ class TabularQ:
     self.q_table[s][self.__actionDict[a]] = round(v, 5)
 
   def copy(self):
-    new_q_table = TabularQ(self.board, self.actions)
+    new_q_table = TabularQ(self.stateDimensions, self.actions)
     new_q_table.setQ(np.copy(self.q_table))
     return new_q_table
-
- 

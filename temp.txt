@@ -1,0 +1,21 @@
+initialize env
+for episodes:
+  done flag
+  #limit steps with a for loop
+  currentstate = env.reset()
+  while not done:
+    
+    action = chooseactionfunction(currentstate, epsilon, q_table)
+    
+    nextState, reward, done = env.step(action)
+
+    updateq()
+
+    if render()
+      render
+    
+    currentstate = nextState
+
+
+
+
