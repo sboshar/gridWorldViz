@@ -2,20 +2,20 @@ import numpy as np
 import random
 
 class Board:
-  def __init__(self, rows, cols, walls, treasures, traps, trapReward=-5, treasureReward=3, rand=False):
+  def __init__(self, rows=10, cols=10, walls=[], treasures=[], traps=[], trapReward=-5, treasureReward=3, rand=False):
     """ Creates a random board. 
     """
     self.trapReward = trapReward 
     self.treasureReward = treasureReward
     self.rows = rows
     self.cols = cols
+    self.shape = (rows, cols)
     self.walls = walls
     self.treasures = treasures
     self.traps = traps
-    self.board = self.initBoard()
-    self.initializeEmptyStates()
-    if rand:
-      self.walls, self.treasures, self.traps = cls.generateBoard(4, 6, 2, 4, 1, 3, 1, 4)
+    self.availablePos =[(x, y) for x in range(self.rows) for y in range(self.cols)]
+    self.board = self.initBoard(rand)
+
 
 
   #b = Board.randomEnv(rows, cols)
@@ -43,12 +43,11 @@ class Board:
   #   self.traps = traps
   #   self.board = self.initBoard()
   #   self.initializeEmptyStates()
-  def wallGenerator(self, availablePos, minLength, maxLength, minNum, maxNum):
+  def wallGenerator(self, minLength, maxLength, minNum, maxNum):
     """Generates a random number of groups of wals between minNum and maxNum
     and each of the groups of walls has a length between minLength and maxLength
 
     Args:
-        availablePos (array): array of tuples of available positions
         minLength (int): min length of wall group 
         maxLength (int): max length of a wall group
         minNum (int): min number of wall groups
@@ -61,11 +60,10 @@ class Board:
     #numbers of wall sequences
     numWallGroup = random.randint(minNum, maxNum)
     directions = np.array([(1, 0), (-1, 0), (0, 1), (0, -1)])
-
     for i in range(numWallGroup):
       #first pos in the walls sequence
-      curr = random.choice(availablePos)
-      availablePos.remove(curr)
+      curr = random.choice(self.availablePos)
+      self.availablePos.remove(curr)
 
       length = random.randint(minLength, maxLength) 
       #generate each random wall sequence
@@ -86,13 +84,13 @@ class Board:
         # and remove it from avialable walls
         if temp:
           newWalls += [temp]
-          if (temp in availablePos):
-            availablePos.remove(temp)
+          if (temp in self.availablePos):
+            self.availablePos.remove(temp)
           curr = temp
     return newWalls
 
 
-  def itemGenerator(self, availablePos, minItems, maxItems):
+  def itemGenerator(self, minItems, maxItems):
     """Used to generate both positions of traps and rewards. Generates
     between minItems and maxItems of the reward/trap and gives them a 
     random avialable position.
@@ -109,9 +107,9 @@ class Board:
     numRewards = random.randint(minItems, maxItems)
     newRewards = []
     for i in range(numRewards):
-      pos = random.choice(availablePos)
+      pos = random.choice(self.availablePos)
       newRewards.append(pos)
-      availablePos.remove(pos)
+      self.availablePos.remove(pos)
     return newRewards    
     
 
@@ -133,23 +131,31 @@ class Board:
         (array, array, array): an array of wall positions, an array of reward positions, and an
                               array of trap positions
     """
-    availablePos = [(x, y) for y in range(self.cols) for x in range(self.rows)]
-    walls = self.wallGenerator(availablePos, minWallLength, maxWallLength, minNumWalls, maxNumWalls)
-    rewards = self.itemGenerator(availablePos, minR, maxR)
-    traps = self.itemGenerator(availablePos, minT, maxT)
+    #availablePos = [(x, y) for y in range(self.cols) for x in range(self.rows)]
+    walls = self.wallGenerator(minWallLength, maxWallLength, minNumWalls, maxNumWalls)
+    rewards = self.itemGenerator(minR, maxR)
+    traps = self.itemGenerator(minT, maxT)
     return (walls, rewards, traps)
   
 #arrays of tuples signifying the positions
-  def initBoard(self):
+  def initBoard(self, rand):  
+    self.board = np.array([[' ' for c in range(self.cols)] for r in range(self.rows)])
+    if rand:
+      self.walls, self.treasures, self.traps = self.generateBoard(4, 6, 2, 4, 1, 3, 1, 4)
     #allows global redefining for random environments
-    board = np.array([[' ' for c in range(self.cols)] for r in range(self.rows)])
+    tempBoard = np.array([[' ' for c in range(self.cols)] for r in range(self.rows)])
     #sets up board to be 2d numpy array of char
     for w in self.walls:
-      board[w] = 'w' 
+      tempBoard[w] = 'w' 
     for t in self.traps:
-      board[t] = 't'
+      tempBoard[t] = 't'
     for r in self.treasures:
-      board[r] = 'r'
+      tempBoard[r] = 'r'
+
+    if not rand:
+      self.initializeAvailablePos()
+    #handle avialable pos
+    
     # if printEnv: 
     #   print("-------------------------------------------------------------------------")
     #   print("Board: ")
@@ -159,7 +165,7 @@ class Board:
     #   print("Traps:", traps)
     #   print("treasuress:", treasures)
     #   print("-------------------------------------------------------------------------")
-    return board
+    return tempBoard
 
   def reward(self, s, rewards=None):
     """ Returns the reward for leaving the current state s
@@ -172,14 +178,14 @@ class Board:
         float: the reward of leaving a state
     """
     if not rewards:
-      rewards={' ': 0, 'w': None, 't': self.trapReward, 'r': self.treasureReward}
+      rewards={' ': -0.1, 'w': None, 't': self.trapReward, 'r': self.treasureReward}
     return rewards[self.board[s]]
-
-  def initializeEmptyStates(self):
-    self.emptyStates = [s for s in self.board if s == ' ']
+    
+  def initializeAvailablePos(self):
+    self.availablePos = [(x, y) for x in range(self.rows) for y in range(self.cols) if self.board[x][y] == ' ']
   
   def getRandomState(self):
-    return random.choice(self.emptyStates)
+    return random.choice(self.availablePos)
 
   def getSPrime(self, s, a):
     """ Returns the state you would travel to taking action a from state s
@@ -216,5 +222,12 @@ class Board:
       return False
     if self.board[s] == 'w':
       return False
+    return True
+  
+
+  def __str__(self):
+    return str(self.board)
+
 if __name__ == "__main__":
-  env = Board.randomBoard(10,10)
+  env = Board(rand=True)
+  print(env)
