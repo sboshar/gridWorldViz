@@ -11,7 +11,7 @@ class TabularQ:
     for i in range(len(actions)):
       self.__actionDict[actions[i]] = i
 
-    #creates a dictionary for the q_table, intializes q values to 0.0
+    #creates a dictionary for the q_table, intializes q vself.stateDimensions[0]alues to 0.0
     self.q_table = np.zeros(stateDimensions + (len(actions),))
 
   def getQ(self):
@@ -40,3 +40,6 @@ class TabularQ:
     new_q_table = TabularQ(self.stateDimensions, self.actions)
     new_q_table.setQ(np.copy(self.q_table))
     return new_q_table
+  
+  def getValueTable(self):
+    return np.array([[round(np.max(self.q_table[(row, col)]), 3) for col in range(self.stateDimensions[0])] for row in range(self.stateDimensions[1])])

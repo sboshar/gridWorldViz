@@ -26,14 +26,15 @@ class GridWorldEnv:
   def step(self, action): 
     #return nextstate, reward, done
     reward = -1
+    terminal = self.board.isTerminal(self.state)
     if random.random() < self.eps:
       action = self.randAction()
     
     if self.board.isValidState(self.board.getSPrime(self.state, action)):
-      self.state = self.board.getSPrime(self.state, action)
       reward = self.board.reward(self.state)
+      self.state = self.board.getSPrime(self.state, action)
   
-    return reward, self.board.isTerminal(self.state)
+    return reward, terminal
       
     
 # if __name__ == '__main__':
