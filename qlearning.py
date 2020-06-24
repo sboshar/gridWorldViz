@@ -6,9 +6,10 @@ import random
 import matplotlib.pyplot as plt
 import math
 
+epsarray = []
 class GridWorldAgent:
 
-  def __init__(self, num_epochs=10000, board=Board(rand=True), actions=[(-1, 0), (1, 0), (0, -1), (0, 1)], 
+  def __init__(self, num_epochs=1000, board=Board(rand=True), actions=[(-1, 0), (1, 0), (0, -1), (0, 1)], 
                minEps=0.1, minAlpha=0.1, gamma=0.9):
     self.num_epochs = num_epochs
     self.env = GridWorldEnv(board, actions)
@@ -20,20 +21,31 @@ class GridWorldAgent:
     
   #strats
   def greedy(self, state):
+ 
+    # print(self.q_table.getQ()[state])
+    # print(self.actions[np.argmax(self.q_table.getQ()[state])]) 
+
     return self.actions[np.argmax(self.q_table.getQ()[state])] # Returns the action that maximizes the q of a given state
 
   #functions for decreasing epsilon (log, exp, linear)
-  def epsLog(self, epoch):
-    return 
-  def epsilonLogDecay(self, ep):                                                       
-    return max(self.minEps, min(1, 1.0 - math.log10((ep  + 1) / 25)))
+  #def epsLog(self, epoch):
+    #return 
+  
+  def epsilonLogDecay(self, epoch):                                                       
+    return max(self.minEps, min(1, 1.0 - math.log10((epoch  + 1) / 25)))
   
   def epsLinear(self, epoch):
     chance = 1 - abs(epoch)/1000
     return chance if chance > .1 else .1
 
   def epsGreedy(self, s, eps, epoch): #epsilon is the chance you act randomly
-    return self.env.randAction() if random.random() < eps(epoch) else self.greedy(s) 
+    # print(eps(epoch))
+    if random.random() < eps(epoch):
+  
+      return self.env.randAction()
+
+    return self.greedy(s)
+    # return self.env.randAction() if random.random() < eps(epoch) else self.greedy(s) 
 
   def updateQ(self, s, a, sprime, reward, alpha, gamma):
     value = (1 - alpha) * self.q_table.getValue(s, a) + alpha * (reward + gamma * np.max(self.q_table.getQ()[sprime]))
@@ -41,6 +53,7 @@ class GridWorldAgent:
   
   def run(self, eps_fn, alpha_fn):
     rewards = []
+    counts = []
     print(self.env.board)
     for epoch in range(self.num_epochs):
       #if epoch % 10 == 0: print(epoch)
@@ -49,21 +62,27 @@ class GridWorldAgent:
       self.env.reset()
       alpha = alpha_fn(epoch)
       epoch_reward = 0
+      count = 0
       while not done:
         #add a limit for iterations
         prevState = self.env.state
         action = self.epsGreedy(self.env.state, eps_fn, epoch)
         reward, done = self.env.step(action)
         epoch_reward += reward
+        count += 1
+        
         self.updateQ(prevState, action, self.env.state, reward, alpha, self.gamma)
-      
+      epsarray.append(eps_fn(epoch))
+      counts.append(count)
         #print(self.env.state)
       print("End of Epoch -------------------------------")
       #if epoch % 50 == 0:
         #agent.env.board.plot(agent.q_table, agent.actions, verbose=True, recolor=0.6)
 
-      rewards.append(epoch_reward)
-    return rewards
+      rewards.append(epoch_reward/count)
+
+
+    return rewards, counts
   
   def value(self, s, q_table):
     """ Returns the value of the state s in q_table. The value for a trap or treasure is the 
@@ -88,9 +107,8 @@ class GridWorldAgent:
     return 0 #Return 0 if a state has no valid neighbor
   
 if __name__ == "__main__":
-  b = Board(walls=[(1,2), (1,3), (1,4), (1, 6)], treasures=[(5,3)], traps=[(8,6)])
-  agent = GridWorldAgent(num_epochs=1000, board=b)
-  r = agent.run(agent.epsLinear, lambda epoch: .1)
+  agent = GridWorldAgent(num_epochs=10000)
+  r, c = agent.run(agent.epsLinear, agent.epsLinear)
   print("Done")
   new = []
   print(agent.q_table.q_table.shape)
@@ -98,11 +116,13 @@ if __name__ == "__main__":
   print(agent.q_table.q_table)
   print("-------------------")
   print(agent.q_table.getValueTable())
-  agent.env.board.plot(agent.q_table, agent.actions, verbose=True, recolor=0.6)
+  agent.env.board.plot(agent.q_table, agent.actions, verbose=True, recolor=0.98)
   for i in range(len(r)):
     if i % 100:
       new.append(np.mean(r[i: i + 100]))
-  plt.plot(r)
+  print(len(c))
+  #plt.plot(epsarray)
+  #plt.plot(c)
   plt.plot(new)
   plt.show()
       

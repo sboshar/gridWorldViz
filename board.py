@@ -17,33 +17,6 @@ class Board:
     self.availablePos =[(x, y) for x in range(self.rows) for y in range(self.cols)]
     self.initBoard(rand)
 
-
-
-  #b = Board.randomEnv(rows, cols)
-  # @classmethod
-  # def randomBoard(cls, rows, cols):
-  #   """ Creates a random board. 
-  #   """
-  #   cls.rows = rows
-  #   cls.cols = cols
-  #   walls, treasures, traps = cls.generateBoard(4, 6, 2, 4, 1, 3, 1, 4)
-  #   return cls(rows, cols, walls, treasures, traps)
-
-  # def __init__(self, walls, treasures, traps):
-  #   """ Takes arrays of tuples containing the locations of the board 
-  #       elements includuing traps, reward etc, and creates a board of dim row by cols
-  #       with those features.
-
-  #   Args:
-  #       walls (array of tuple): [description]
-  #       treasures (array of tuples): [description]
-  #       traps (array of tuple): [description]
-  #   """
-  #   self.walls = walls
-  #   self.treasures = treasures
-  #   self.traps = traps
-  #   self.board = self.initBoard()
-  #   self.initializeEmptyStates()
   def wallGenerator(self, minLength, maxLength, minNum, maxNum):
     """Generates a random number of groups of wals between minNum and maxNum
     and each of the groups of walls has a length between minLength and maxLength
@@ -107,7 +80,7 @@ class Board:
     #inclusive on both ends
     numRewards = random.randint(minItems, maxItems)
     newRewards = []
-    for i in range(numRewards):
+    for _ in range(numRewards):
       pos = random.choice(self.availablePos)
       newRewards.append(pos)
       self.availablePos.remove(pos)
@@ -176,7 +149,6 @@ class Board:
     Returns:
         float: the reward of leaving a state
     """
-    print(s)
     if not rewards:
       rewards={' ': -0.1, 'w': None, 't': self.trapReward, 'r': self.treasureReward}
     return rewards[self.board[s]]
@@ -228,33 +200,37 @@ class Board:
   def __str__(self):
     return str(np.where(self.board==' ', '☐', self.board))
 
-  def plot(self, q_table, actions, verbose=False, recolor=0.98, arrows=True):
-    """ Plots the values of each state on the board using matPlotLib. The board is colored with 
-        a gradient to distinguish between high and low valued states, and arrows are plotted on 
-        each state that point to the highest valued neighbor. Following the arrows, 
-        therefore, represents, following the policy. 
+  def plotArrows(self, ax, actions, bestActions):
+    horiz = np.array([actions[i][1] if i != -1 else 0 for i in bestActions])
+    vert = np.array([-1 * actions[i][0] if i != -1 else 0 for i in bestActions]) 
+    Y = np.arange(0, self.rows, 1)
+    X = np.arange(0, self.cols, 1)
+    X, Y = np.meshgrid(X, Y)
+    # _ , ax = plt.subplots()
+    ax.quiver(X, Y, horiz, vert)
 
-    Args:
-        q_table (TabularQ): [description]
-        verbose (bool, optional): a boolean flag. If True, PlotQ will also print out the q_table 
-                                  and the delta between the old q and the new q table. 
-                                  Defaults to False.
-        recolor (float, optional): a float in range [0,1) used for recoloring. 0 being no recoloring and 1 being
-                                  maximum recoloring.
-                                  Defaults to 0.98.
-        arrows (bool, optional): Whether arrows are drawn on the board.
-                                Defaults to True.
-    """
-    #a 2d array holding the values for each state
-    #values = [[value((y,x), q_table) for x in range(cols)] for y in range (rows)]
-    values = q_table.getValueTable()
-    
-    if verbose: 
-      print("-------------------------------------------------------------------------")
-      print("Value Array:")
-      print(np.round(np.array(values), 3))
-      print("-------------------------------------------------------------------------")
+  
+  def getBestActions(self, q_table, actions):
+    bestActions = []
+    for x in range(self.rows):
+      for y in range(self.cols):
+        s = (x, y)
+        bestA = 0
+        if not self.isValidState(s):
+          bestActions.append(-1)
+          continue
+        for a in range(len(actions)):
+          if self.isValidState(self.getSPrime(s, actions[a])): #find a valid best action, bestA
+            bestA = a
+            break
+        for a in range(len(actions)): #compare each valid action to bestA
+          if self.isValidState(self.getSPrime(s, actions[a])) and \
+            q_table.getValue(s, actions[a]) >= q_table.getValue(s, actions[bestA]):
+            bestA = a
+        bestActions.append(bestA)
+    return bestActions
 
+  def recolorAndRescale(self, values, recolor):
     #min and max value of values used for caling the color purposes
     maxValue = max([max(i) for i in values])
 
@@ -277,41 +253,47 @@ class Board:
     
     #map to 0-1 range
     values = [[np.interp(values[x][y], [newMin, maxValue], [0, 1]) for y in range(self.cols)] for x in range(self.rows)]
+    return values
+
+  def plot(self, q_table, actions, verbose=False, recolor=0.98, arrows=True):
+    """ Plots the values of each state on the board using matPlotLib. The board is colored with 
+        a gradient to distinguish between high and low valued states, and arrows are plotted on 
+        each state that point to the highest valued neighbor. Following the arrows, 
+        therefore, represents, following the policy. 
+
+    Args:
+        q_table (TabularQ): [description]
+        verbose (bool, optional): a boolean flag. If True, PlotQ will also print out the q_table 
+                                  and the delta between the old q and the new q table. 
+                                  Defaults to False.
+        recolor (float, optional): a float in range [0,1) used for recoloring. 0 being no recoloring and 1 being
+                                  maximum recoloring.
+                                  Defaults to 0.98.
+        arrows (bool, optional): Whether arrows are drawn on the board.
+                                Defaults to True.
+    """
+    #a 2d array holding the values for each state
+    #values = [[value((y,x), q_table) for x in range(cols)] for y in range (rows)]
+    values = q_table.getValueTable()
+
+    if verbose: 
+      print("-------------------------------------------------------------------------")
+      print("Value Array:")
+      print(np.round(np.array(values), 3))
+      print("-------------------------------------------------------------------------")
+
+    values = self.recolorAndRescale(values, recolor)
     
     #creates an array of shape [1, row*col] where each element represents the best action to take in that state
     if arrows:
-      bestActions = []
-      for x in range(self.rows):
-        for y in range(self.cols):
-          s = (x, y)
-          bestA = 0
-          if not self.isValidState(s):
-            bestActions.append(-1)
-            continue
-          for a in range(len(actions)):
-            if self.isValidState(self.getSPrime(s, actions[a])): #find a valid best action, bestA
-              bestA = a
-              break
-          for a in range(len(actions)): #compare each valid action to bestA
-            if self.isValidState(self.getSPrime(s, actions[a])) and \
-              q_table.getValue(s, actions[a]) >= q_table.getValue(s, actions[bestA]):
-              bestA = a
-          bestActions.append(bestA)
-      
-      print(np.array(bestActions).reshape)
-      horiz = np.array([actions[i][1] if i != -1 else 0 for i in bestActions])
-      vert = np.array([-1 * actions[i][0] if i != -1 else 0 for i in bestActions]) 
-      
-      Y = np.arange(0, self.rows, 1)
-      X = np.arange(0, self.cols, 1)
-
-      X, Y = np.meshgrid(X, Y)
+      bestActions = self.getBestActions(q_table, actions)
       _ , ax = plt.subplots()
-      ax.quiver(X, Y, horiz, vert)
+      self.plotArrows(ax, actions, bestActions)
+    
     plt.imshow(values)
     plt.colorbar()
     plt.show()
-
+ 
 if __name__ == "__main__":
   env = Board(rand=True)
   print(env)

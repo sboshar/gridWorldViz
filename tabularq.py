@@ -42,4 +42,5 @@ class TabularQ:
     return new_q_table
   
   def getValueTable(self):
-    return np.array([[round(np.max(self.q_table[(row, col)]), 3) for col in range(self.stateDimensions[0])] for row in range(self.stateDimensions[1])])
+    return np.array([[round(np.max(self.q_table[(row, col)]), 3) \
+      for col in range(self.stateDimensions[0])] for row in range(self.stateDimensions[1])])

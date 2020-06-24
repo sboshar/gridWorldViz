@@ -334,9 +334,10 @@ def plotQ(q_table, verbose=False, recolor=0.98, arrows=True):
     
     Y = np.arange(0, rows, 1)
     X = np.arange(0, cols, 1)
-
     X, Y = np.meshgrid(X, Y)
+
     _ , ax = plt.subplots()
+    print(X, Y, horiz, vert)
     ax.quiver(X, Y, horiz, vert)
   plt.imshow(values)
   plt.colorbar()

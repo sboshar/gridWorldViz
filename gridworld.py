@@ -2,7 +2,7 @@ from board import Board
 import random
 
 class GridWorldEnv:
-  def __init__(self, board, actions, eps=0.9):
+  def __init__(self, board, actions, eps=1.0):
     #some sort of board
     self.actions = actions
     self.board = board
@@ -27,7 +27,7 @@ class GridWorldEnv:
     #return nextstate, reward, done
     reward = -1
     terminal = self.board.isTerminal(self.state)
-    if random.random() < self.eps:
+    if random.random() < 1 - self.eps:
       action = self.randAction()
     
     if self.board.isValidState(self.board.getSPrime(self.state, action)):
