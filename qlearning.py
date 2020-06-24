@@ -10,7 +10,7 @@ epsarray = []
 class GridWorldAgent:
 
   def __init__(self, num_epochs=1000, board=Board(rand=True), actions=[(-1, 0), (1, 0), (0, -1), (0, 1)], 
-               minEps=0.1, minAlpha=0.1, gamma=0.9):
+               minEps=0.1, minAlpha=0.1, gamma=0.9, max_steps=250):
     self.num_epochs = num_epochs
     self.env = GridWorldEnv(board, actions)
     self.q_table = TabularQ(board.shape, actions)
@@ -18,6 +18,7 @@ class GridWorldAgent:
     self.minEps = minEps
     self.minAlpha = minAlpha
     self.gamma = gamma
+    self.max_steps = max_steps
     
   #strats
   def greedy(self, state):
@@ -63,7 +64,7 @@ class GridWorldAgent:
       alpha = alpha_fn(epoch)
       epoch_reward = 0
       count = 0
-      while not done:
+      while not done and count < self.max_steps:
         #add a limit for iterations
         prevState = self.env.state
         action = self.epsGreedy(self.env.state, eps_fn, epoch)
@@ -75,7 +76,7 @@ class GridWorldAgent:
       epsarray.append(eps_fn(epoch))
       counts.append(count)
         #print(self.env.state)
-      print("End of Epoch -------------------------------")
+      # print("End of Epoch -------------------------------")
       #if epoch % 50 == 0:
         #agent.env.board.plot(agent.q_table, agent.actions, verbose=True, recolor=0.6)
 

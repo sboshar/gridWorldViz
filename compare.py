@@ -26,6 +26,6 @@ if __name__ == "__main__":
   board = Board(rand=True)
   sequential = Sequential(actions=actions, board=board, plot=False)
   sequential.value_iteration()
-  qlearning = GridWorldAgent(actions=actions, board=board)
+  qlearning = GridWorldAgent(actions=actions, board=board, max_steps=5)
   qlearning.run(qlearning.epsLinear, qlearning.epsLinear)
   comparePlot(sequential, qlearning)
