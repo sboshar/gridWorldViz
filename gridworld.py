@@ -1,7 +1,7 @@
 from board import Board
 import random
 
-class GridWorldEnv:
+class GridWorldEnv(object):
   def __init__(self, board, actions, eps=0.7):
     #some sort of board
     self.actions = actions

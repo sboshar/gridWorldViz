@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-class Board:
+class Board(object):
   def __init__(self, rows=10, cols=10, walls=[], treasures=[], traps=[], trapReward=-5, treasureReward=3, rand=False):
     """ Creates a random board. 
     """

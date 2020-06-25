@@ -1,5 +1,5 @@
 import numpy as np
-class TabularQ:
+class TabularQ(object):
 
   # b = tabularQ((rows, cols), )
   def __init__(self, stateDimensions, actions):

@@ -133,6 +133,9 @@ class Sequential(object):
       self.q_table = new_q_table.copy()
     return self.q_table
 
+  def __str__(self):
+    return "Sequential"
+
 if __name__ == "__main__":
   s = Sequential()
   s.value_iteration()
