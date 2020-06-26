@@ -254,8 +254,13 @@ class Board(object):
     #map to 0-1 range
     values = [[np.interp(values[x][y], [newMin, maxValue], [0, 1]) for y in range(self.cols)] for x in range(self.rows)]
     return values
-
-  def plot(self, q_table, actions, verbose=False, recolor=0.98, arrows=True):
+  
+  # def plotBoard(self):
+  #   b = self.board
+  #   np.where(b=='w', 1, array1)
+  #   np.where(b=='w', 1, array1)  
+    
+  def plot(self, q_table, actions, verbose=False, recolor=0.98, arrows=True, agentPos=None):
     """ Plots the values of each state on the board using matPlotLib. The board is colored with 
         a gradient to distinguish between high and low valued states, and arrows are plotted on 
         each state that point to the highest valued neighbor. Following the arrows, 
@@ -283,17 +288,20 @@ class Board(object):
       print("-------------------------------------------------------------------------")
 
     values = self.recolorAndRescale(values, recolor)
-    
     #creates an array of shape [1, row*col] where each element represents the best action to take in that state
     if arrows:
       bestActions = self.getBestActions(q_table, actions)
       _ , ax = plt.subplots()
       self.plotArrows(ax, actions, bestActions)
     
-    plt.imshow(values)
-    plt.colorbar()
-    plt.show()
- 
+    
+    if agentPos:
+      values[agentPos[0]][agentPos[1]] = 1
+      return [plt.imshow(values, animated=True)]
+    else:
+      plt.imshow(values)
+      plt.show()
+
 if __name__ == "__main__":
   env = Board(rand=True)
   print(env)

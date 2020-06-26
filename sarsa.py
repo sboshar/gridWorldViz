@@ -22,11 +22,17 @@ class Sarsa(TemporalDifference):
     self.q_table.setValue(s, a, value)
     
 
-  def run(self, eps_fn, alpha_fn):
+  def run(self, eps_fn, alpha_fn, renderFreq=0):
     rewards = []
     counts = []
     for epoch in range(self.num_epochs):
-      #if epoch % 10 == 0: print(epoch)
+      render = False
+      #it will render this epoch
+      if renderFreq and epoch % renderFreq == 0:
+        render = True
+        images = []
+        fig = plt.figure()
+        #if epoch % 10 == 0: print(epoch)
       done = False
       #reset the agents state each epoch
       s = self.env.reset()
@@ -43,10 +49,16 @@ class Sarsa(TemporalDifference):
         self.update(s, a, self.env.state, aPrime, reward, alpha, self.gamma)
 
         a = aPrime
+        if render:
+          images.append(self.env.board.plot(self.q_table, self.env.actions, agentPos=s, arrows=False))
         s = self.env.state
 
         epoch_reward += reward
         count += 1
+        
+      
+      if render:
+        self.render(fig, images)
       
       counts.append(count)
       #do we want to divide by count?
@@ -57,8 +69,8 @@ class Sarsa(TemporalDifference):
     return "Sarsa"
 
 if __name__ == "__main__":
-  agent = Sarsa(num_epochs=10000)
-  r, c = agent.run(agent.epsLinear, agent.epsLinear)
+  agent = Sarsa(num_epochs=100)
+  r, c = agent.run(agent.epsLinear, agent.epsLinear, renderFreq=20)
   print("Done")
   new = []
   print(agent.q_table.q_table.shape)

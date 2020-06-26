@@ -1,13 +1,13 @@
+import sys
 from board import Board
 from gridworld import GridWorldEnv
 from tabularq import TabularQ
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 import math
+import matplotlib.pyplot as plt
 from temporalDifference import TemporalDifference
 
-epsarray = []
 #off policy Temporal difference learning
 class QLearning(TemporalDifference):
 
@@ -19,11 +19,18 @@ class QLearning(TemporalDifference):
     value = (1 - alpha) * self.q_table.getValue(s, a) + alpha * (reward + gamma * np.max(self.q_table.getQ()[sprime]))
     self.q_table.setValue(s, a, value)
 
-  def run(self, eps_fn, alpha_fn):
+  def run(self, eps_fn, alpha_fn, renderFreq=0):
     rewards = []
     counts = []
-    print(self.env.board)
     for epoch in range(self.num_epochs):
+      render = False
+      #it will render this epoch
+      if renderFreq and epoch % renderFreq == 0:
+        render = True
+        images = []
+        fig = plt.figure()
+
+      
       #if epoch % 10 == 0: print(epoch)
       done = False
       #reset the agents state each epoch
@@ -40,7 +47,13 @@ class QLearning(TemporalDifference):
         count += 1
         
         self.update(prevState, action, self.env.state, reward, alpha, self.gamma)
-      epsarray.append(eps_fn(epoch))
+        if render:
+          im = self.env.board.plot(self.q_table, self.env.actions, agentPos=prevState, arrows=False)
+          images.append(im)
+      
+      if render:
+        self.render(fig, images)
+      
       counts.append(count)
      
       #do we want to divide by count?
@@ -53,8 +66,8 @@ class QLearning(TemporalDifference):
     return "QLearning"
   
 if __name__ == "__main__":
-  agent = QLearning(num_epochs=10000)
-  r, c = agent.run(agent.epsLinear, agent.epsLinear)
+  agent = QLearning(num_epochs=1000)
+  r, c = agent.run(agent.epsLinear, agent.epsLinear, renderFreq=500)
   print("Done")
   new = []
   print(agent.q_table.q_table.shape)
@@ -69,8 +82,8 @@ if __name__ == "__main__":
   print(len(c))
   #plt.plot(epsarray)
   #plt.plot(c)
-  plt.plot(new)
-  plt.show()
+  # plt.plot(new)
+  # plt.show()
       
         
         

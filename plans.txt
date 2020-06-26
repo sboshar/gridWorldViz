@@ -1,0 +1,16 @@
+plans:
+- render function
+- allow for gym/allow for different envs
+- policy learning
+- monte carlo methods
+- evolutionary algorithms
+
+gridworld/universe additions:
+- moving walls
+- teamates
+
+http://www.incompleteideas.net/book/first/ebook/node43.html
+https://towardsdatascience.com/reinforcement-learning-rl-101-with-python-e1aa0d37d43b
+
+agar.io env
+animate epoch and also animate qlearining

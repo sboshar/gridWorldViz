@@ -9,7 +9,6 @@ import numpy as np
 #want, compare plot, compare grid, accept a list of models
 #compare grid
 class CompareModels(object):
-
   def __init__(self, modelClass, num_epochs=10000, actions = [(-1, 0), (1, 0), (0, -1), (0, 1)], board = Board(rand=True),
               recolor=0.98, arrows=True, max_steps=100):
     

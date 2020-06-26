@@ -6,6 +6,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import math
+import matplotlib.animation as animation
 
 class TemporalDifference(object):
   def __init__(self, num_epochs=1000, board=Board(rand=True), actions=[(-1, 0), (1, 0), (0, -1), (0, 1)], 
@@ -50,12 +51,17 @@ class TemporalDifference(object):
     return self.greedy(s)
     # return self.env.randAction() if random.random() < eps(epoch) else self.greedy(s) 
   
-  def run(self, eps_fn, alpha_fn):
+  def run(self, eps_fn, alpha_fn, renderFreq):
     rewards = []
     counts = []
-    print(self.env.board)
     for epoch in range(self.num_epochs):
       #if epoch % 10 == 0: print(epoch)
+      render = False
+      #it will render this epoch
+      if epoch % renderFreq == 0:
+        render = True
+        images = []
+
       done = False
       #reset the agents state each epoch
       self.env.reset()
@@ -68,10 +74,16 @@ class TemporalDifference(object):
         action = self.epsGreedy(self.env.state, eps_fn, epoch)
         reward, done = self.env.step(action)
         epoch_reward += reward
-        count += 1
-        
+        count += 1 
         self.updateQ(prevState, action, self.env.state, reward, alpha, self.gamma)
-      epsarray.append(eps_fn(epoch))
+        
+        #add the plot image to images
+        if render:
+          images.append(self.env.board.plot(self.q_table, self.env.actions, agentPos=prevState))
+          
+      #actually show render
+      if render:
+        self.render(images)
       counts.append(count)
         #print(self.env.state)
       # print("End of Epoch -------------------------------")
@@ -105,6 +117,13 @@ class TemporalDifference(object):
       return max(values)
     return 0 #Return 0 if a state has no valid neighbor
   
+  def render(self, fig, images):
+    _ = animation.ArtistAnimation(fig, images, interval=50, blit=True,
+                                repeat_delay=500)
+    plt.show()
+    
+    
+
 # if __name__ == "__main__":
 #   agent = GridWorldAgent(num_epochs=10000)
 #   r, c = agent.run(agent.epsLinear, agent.epsLinear)
