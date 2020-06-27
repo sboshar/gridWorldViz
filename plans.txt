@@ -14,3 +14,4 @@ https://towardsdatascience.com/reinforcement-learning-rl-101-with-python-e1aa0d3
 
 agar.io env
 animate epoch and also animate qlearining
+leader board of best combinsation of lr etc, fastest convergence or best acc..
