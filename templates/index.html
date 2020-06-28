@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <title>Document</title>
+</head>
+<body>
+  <div id="rewardPlot"></div>
+  <script type="text/javascript">
+    console.log({{ data.reward }});
+
+    let xs = [];
+    for(let i = 0; i < {{data.reward}}.length; i++) {
+      xs.push(i);
+    }
+    let trace1 = {
+      x: xs,
+      y: {{data.reward}},
+      type: 'scatter'
+    };
+    
+    let data = [trace1];
+    let z = document.getElementById("rewardPlot");
+    console.log(z);
+    Plotly.newPlot("rewardPlot", data);
+  </script>
+  <h1 id="hellos">
+    <ul id="list" class="class">
+      <li class="number1">erik </li>
+      <li class="number2">is</li>
+      <li class="number3">a</li>
+      <li class="number4">big</li>
+      <li class="number5">fat</li>
+      <li class="number6">piece</li>
+      <li class="number7">of</li>
+      <li class="number8">stinky</li>
+      <li class="number9">poop</li>
+      <li class="number10">!!!</li>
+    </ul>
+  </h1>
+</body>
+</html>

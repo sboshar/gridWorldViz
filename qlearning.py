@@ -22,6 +22,7 @@ class QLearning(TemporalDifference):
   def run(self, eps_fn, alpha_fn, renderFreq=0):
     rewards = []
     counts = []
+    print(self.env.board)
     for epoch in range(self.num_epochs):
       render = False
       #it will render this epoch
@@ -52,6 +53,7 @@ class QLearning(TemporalDifference):
           images.append(im)
       
       if render:
+        print(images)
         self.render(fig, images)
       
       counts.append(count)
@@ -66,8 +68,8 @@ class QLearning(TemporalDifference):
     return "QLearning"
   
 if __name__ == "__main__":
-  agent = QLearning(num_epochs=1000)
-  r, c = agent.run(agent.epsLinear, agent.epsLinear, renderFreq=500)
+  agent = QLearning(num_epochs=100)
+  r, c = agent.run(agent.epsLinear, agent.epsLinear)
   print("Done")
   new = []
   print(agent.q_table.q_table.shape)
